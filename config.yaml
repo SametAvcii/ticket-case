@@ -1,0 +1,7 @@
+DB:
+  HOST: "localhost"
+  PORT: "27017"
+  USERNAME: "root"
+  PASSWORD: "secret"
+  NAME: "gowit-case-db"
+  TIMEZONE: "Europe/Istanbul"
