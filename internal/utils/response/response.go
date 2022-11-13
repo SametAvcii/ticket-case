@@ -1,13 +1,23 @@
 package response
 
 type ResponseData struct {
-	Data   interface{} `json:"data"`
+	Ticket interface{} `json:"ticket"`
 	Status int         `json:"status"`
+}
+
+type ResponseOnlyStatus struct {
+	Status int `json:"status"`
 }
 
 func Response(Status int, Data interface{}) ResponseData {
 	return ResponseData{
-		Data:   Data,
+		Ticket: Data,
+		Status: Status,
+	}
+}
+
+func ResponseStatus(Status int) ResponseOnlyStatus {
+	return ResponseOnlyStatus{
 		Status: Status,
 	}
 }

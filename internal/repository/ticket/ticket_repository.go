@@ -1,34 +1,28 @@
 package repository
 
 import (
-	"context"
+	"errors"
 	models "samet-avci/gowit/models/ticket"
 	"sync"
 
 	"gorm.io/gorm"
 )
 
-type Transactor interface {
-	Begin(ctx context.Context) error
-	Commit() error
-	Rollback() error
-}
 type ITicketRepository interface {
-	Transactor
 	IsDuplicate(name string) bool
-	CreateTicket(ticket models.Ticket) error
+	CreateTicket(ticket *models.Ticket) error
 	GetTicket(id int) (models.Ticket, error)
-	SellTicket(allocation int) error
-	IsHaveAllocation(id int) (int, error)
+	SellTicket(quantity, ID int) error
+	SaveSoldTicket(soldTicket models.SoldTicket) error
 }
 
 type TicketRepository struct {
 	db *gorm.DB
-	mu *sync.RWMutex
+	mu sync.Mutex
 }
 
-func NewTicketRepository(db *gorm.DB, mu *sync.RWMutex) *TicketRepository {
-	return &TicketRepository{db: db, mu: mu}
+func NewTicketRepository(db *gorm.DB) *TicketRepository {
+	return &TicketRepository{db: db}
 }
 
 func (r *TicketRepository) IsDuplicate(name string) bool {
@@ -42,7 +36,7 @@ func (r *TicketRepository) IsDuplicate(name string) bool {
 	return false
 }
 
-func (r *TicketRepository) CreateTicket(ticket models.Ticket) error {
+func (r *TicketRepository) CreateTicket(ticket *models.Ticket) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	err := r.db.Create(&ticket).Error
@@ -56,17 +50,23 @@ func (r *TicketRepository) GetTicket(id int) (models.Ticket, error) {
 	err := r.db.Model(&models.Ticket{}).Where("id = ?", id).First(&ticket).Error
 	return ticket, err
 }
-func (r *TicketRepository) IsHaveAllocation(id int) (int, error) {
+
+func (r *TicketRepository) SellTicket(quantity, ID int) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	var allocation int
-	err := r.db.Model(&models.Ticket{}).Select("allocation").Where("id = ?", id).First(&allocation).Error
-	return allocation, err
+
+	var ticket models.Ticket
+	err := r.db.Model(&models.Ticket{}).Where("id= ?", ID).Where("allocation >= ?", quantity).First(&ticket).
+		Update("allocation", gorm.Expr("allocation - ?", quantity)).Error
+	if err != nil {
+		return errors.New("not enough allocations")
+	}
+	return nil
 }
 
-func (r *TicketRepository) SellTicket(allocation int) error {
+func (r *TicketRepository) SaveSoldTicket(soldTicket models.SoldTicket) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	err := r.db.Model(&models.Ticket{}).Update("allocation", allocation).Error
+	err := r.db.Create(&soldTicket).Error
 	return err
 }

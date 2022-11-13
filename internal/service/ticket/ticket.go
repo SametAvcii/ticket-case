@@ -14,10 +14,15 @@ type ITicketService interface {
 	CreateTicketOption(ctx context.Context, request request.NewTicketDTO) (response.NewTicketDTO, error)
 	GetTicket(ctx context.Context, id string) (response.GetTicketDTO, error)
 	PurchaseFromTicketOption(ctx context.Context, id string, request request.PurchaseFromTicketOptionsDTO) error
+	//WithTrx(*gorm.DB) *TicketService
 }
 
 type TicketService struct {
 	repository repository.ITicketRepository
+}
+
+func NewTicketService(repository repository.ITicketRepository) ITicketService {
+	return &TicketService{repository: repository}
 }
 
 func (s *TicketService) CreateTicketOption(ctx context.Context, request request.NewTicketDTO) (response.NewTicketDTO, error) {
@@ -32,7 +37,7 @@ func (s *TicketService) CreateTicketOption(ctx context.Context, request request.
 		Allocation: request.Allocation,
 	}
 
-	err := s.repository.CreateTicket(newTicket)
+	err := s.repository.CreateTicket(&newTicket)
 	if err != nil {
 		return response.NewTicketDTO{}, errors.New("Cannot create new ticket, please try again")
 	}
@@ -57,23 +62,19 @@ func (s *TicketService) GetTicket(ctx context.Context, id string) (response.GetT
 func (s *TicketService) PurchaseFromTicketOption(ctx context.Context, id string, request request.PurchaseFromTicketOptionsDTO) error {
 	intID, _ := strconv.Atoi(id)
 
-	s.repository.Begin(ctx)
-	allocation, err := s.repository.IsHaveAllocation(intID)
+	err := s.repository.SellTicket(int(request.Quantity), intID)
 	if err != nil {
-		s.repository.Rollback()
-		return errors.New("error on ocurred while getting ticket")
+		return errors.New("error an occured while ticket selling. " + err.Error())
 	}
 
-	if int(request.Quantity) > allocation {
-		s.repository.Rollback()
-		return errors.New("We don't have enough ticket")
+	soldTicket := models.SoldTicket{
+		UserID:   request.UserID,
+		Quantity: request.Quantity,
 	}
-
-	newAllocation := allocation - int(request.Quantity)
-	err = s.repository.SellTicket(newAllocation)
+	err = s.repository.SaveSoldTicket(soldTicket)
 	if err != nil {
-		return errors.New("error on ocurred while getting ticket")
+		return errors.New("error an occured while saving selled ticket")
 	}
-	s.repository.Commit()
 	return nil
+
 }

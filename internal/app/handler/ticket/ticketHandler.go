@@ -20,7 +20,7 @@ type TicketHandler struct {
 	service ticketService.ITicketService
 }
 
-func newTicketHandler(service ticketService.ITicketService) *TicketHandler {
+func NewTicketHandler(service ticketService.ITicketService) *TicketHandler {
 	return &TicketHandler{service: service}
 }
 
@@ -60,6 +60,6 @@ func (h *TicketHandler) PurchaseFromTicketOption(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, response.Response(http.StatusBadRequest, err.Error()))
 	}
-	return c.JSON(http.StatusOK, response.Response(http.StatusOK, ""))
+	return c.JSON(http.StatusOK, response.ResponseStatus(http.StatusOK))
 
 }
