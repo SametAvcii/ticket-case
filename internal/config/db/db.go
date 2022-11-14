@@ -1,48 +1,36 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
+	"os"
 	models "samet-avci/gowit/models/ticket"
 
-	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func configSetup() {
-
-	viper.SetConfigFile("../app/.env")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %w", err))
-	}
-}
-
 func Connect() *gorm.DB {
-	/*configSetup()
-	dbHost := viper.GetString("DB_HOST")
-	dbPort := viper.GetString("DB_PORT")
-	dbUser := viper.GetString("DB_USER")
-	dbPass := viper.GetString("DB_PASSWORD")
-	dbName := viper.GetString("DB_NAME")
-	//dbtimeZone := viper.GetString("DB_TIMEZONE")
-
-	fmt.Println("port:", dbPort)*/
-
-	dbHost := "localhost"
-	dbPort := "5432"
-	dbUser := "root"
-	dbPass := "secret"
-	dbName := "gowit-case-db"
+	dbHost := os.Getenv("DATABASE_HOST")
+	dbPort := os.Getenv("DATABASE_PORT")
+	dbUser := os.Getenv("POSTGRES_USER")
+	dbPass := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB")
 
 	dbUrl := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, dbPort, dbUser, dbName, dbPass)
+	fmt.Println("db", dbUrl)
 	db, err := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
+
+	sqlDB, err := sql.Open("pgx", dbUrl)
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
 	if err != nil {
 		panic(err.Error())
 	}
-	DB = db
+	DB = gormDB
 
 	err = AutoMigrate()
 	if err != nil {

@@ -28,8 +28,8 @@ func (_m *ITicketRepository) CreateTicket(ctx context.Context, ticket *models.Ti
 	return r0
 }
 
-// GetTicketByID provides a mock function with given fields: ctx, id
-func (_m *ITicketRepository) GetTicketByID(ctx context.Context, id int) (models.Ticket, error) {
+// GetTicket provides a mock function with given fields: ctx, id
+func (_m *ITicketRepository) GetTicket(ctx context.Context, id int) (models.Ticket, error) {
 	ret := _m.Called(ctx, id)
 
 	var r0 models.Ticket
@@ -77,13 +77,13 @@ func (_m *ITicketRepository) SaveSoldTicket(ctx context.Context, soldTicket mode
 	return r0
 }
 
-// UpdateAllocation provides a mock function with given fields: ctx, allocation, id
-func (_m *ITicketRepository) UpdateAllocation(ctx context.Context, allocation uint, id uint) error {
-	ret := _m.Called(ctx, allocation, id)
+// SellTicket provides a mock function with given fields: ctx, quantity, ID
+func (_m *ITicketRepository) SellTicket(ctx context.Context, quantity int, ID int) error {
+	ret := _m.Called(ctx, quantity, ID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint, uint) error); ok {
-		r0 = rf(ctx, allocation, id)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) error); ok {
+		r0 = rf(ctx, quantity, ID)
 	} else {
 		r0 = ret.Error(0)
 	}
