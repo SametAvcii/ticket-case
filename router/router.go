@@ -13,4 +13,5 @@ func Init(router *echo.Echo, tx *gorm.DB) {
 	router.POST("ticket_options", ticketHandler.CreateTicketOption)
 	router.GET("ticket/:id", ticketHandler.GetTicket)
 	router.POST("ticket_options/:id/purchases", ticketHandler.PurchaseFromTicketOption)
+
 }

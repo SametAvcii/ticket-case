@@ -1,72 +1,59 @@
 package repository
 
 import (
-	"errors"
+	"context"
 	models "samet-avci/gowit/models/ticket"
-	"sync"
 
 	"gorm.io/gorm"
 )
 
 type ITicketRepository interface {
-	IsDuplicate(name string) bool
-	CreateTicket(ticket *models.Ticket) error
-	GetTicket(id int) (models.Ticket, error)
-	SellTicket(quantity, ID int) error
-	SaveSoldTicket(soldTicket models.SoldTicket) error
+	IsDuplicate(ctx context.Context, name string) bool
+	CreateTicket(ctx context.Context, ticket *models.Ticket) error
+	GetTicketByID(ctx context.Context, id int) (models.Ticket, error)
+	UpdateAllocation(ctx context.Context, allocation, id uint) error
+	SaveSoldTicket(ctx context.Context, soldTicket models.SoldTicket) error
 }
 
 type TicketRepository struct {
 	db *gorm.DB
-	mu sync.Mutex
 }
 
 func NewTicketRepository(db *gorm.DB) *TicketRepository {
 	return &TicketRepository{db: db}
 }
 
-func (r *TicketRepository) IsDuplicate(name string) bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *TicketRepository) IsDuplicate(ctx context.Context, name string) bool {
+
 	var ticket models.Ticket
-	_ = r.db.Model(&models.Ticket{}).Where("name = ?", name).First(&ticket)
+	_ = r.db.WithContext(ctx).Model(&models.Ticket{}).Debug().Where("name = ?", name).First(&ticket)
 	if ticket.ID > 0 {
 		return true
 	}
 	return false
 }
 
-func (r *TicketRepository) CreateTicket(ticket *models.Ticket) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	err := r.db.Create(&ticket).Error
+func (r *TicketRepository) CreateTicket(ctx context.Context, ticket *models.Ticket) error {
+
+	err := r.db.WithContext(ctx).Create(&ticket).Error
 	return err
 }
 
-func (r *TicketRepository) GetTicket(id int) (models.Ticket, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *TicketRepository) GetTicketByID(ctx context.Context, id int) (models.Ticket, error) {
+
 	var ticket models.Ticket
-	err := r.db.Model(&models.Ticket{}).Where("id = ?", id).First(&ticket).Error
+	err := r.db.WithContext(ctx).Model(&models.Ticket{}).Where("id = ?", id).First(&ticket).Error
 	return ticket, err
 }
 
-func (r *TicketRepository) SellTicket(quantity, ID int) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *TicketRepository) UpdateAllocation(ctx context.Context, allocation, id uint) error {
 
-	var ticket models.Ticket
-	err := r.db.Model(&models.Ticket{}).Where("id= ?", ID).Where("allocation >= ?", quantity).First(&ticket).
-		Update("allocation", gorm.Expr("allocation - ?", quantity)).Error
-	if err != nil {
-		return errors.New("not enough allocations")
-	}
-	return nil
+	err := r.db.WithContext(ctx).Model(&models.Ticket{}).Where("id = ?", id).Update("allocation", allocation).Error
+	return err
 }
 
-func (r *TicketRepository) SaveSoldTicket(soldTicket models.SoldTicket) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	err := r.db.Create(&soldTicket).Error
+func (r *TicketRepository) SaveSoldTicket(ctx context.Context, soldTicket models.SoldTicket) error {
+
+	err := r.db.WithContext(ctx).Create(&soldTicket).Error
 	return err
 }

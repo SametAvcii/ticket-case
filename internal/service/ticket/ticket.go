@@ -8,6 +8,7 @@ import (
 	repository "samet-avci/gowit/internal/repository/ticket"
 	models "samet-avci/gowit/models/ticket"
 	"strconv"
+	"sync"
 )
 
 type ITicketService interface {
@@ -19,6 +20,7 @@ type ITicketService interface {
 
 type TicketService struct {
 	repository repository.ITicketRepository
+	m          sync.Mutex
 }
 
 func NewTicketService(repository repository.ITicketRepository) ITicketService {
@@ -26,8 +28,9 @@ func NewTicketService(repository repository.ITicketRepository) ITicketService {
 }
 
 func (s *TicketService) CreateTicketOption(ctx context.Context, request request.NewTicketDTO) (response.NewTicketDTO, error) {
-
-	Isduplicated := s.repository.IsDuplicate(request.Name)
+	s.m.Lock()
+	defer s.m.Unlock()
+	Isduplicated := s.repository.IsDuplicate(ctx, request.Name)
 	if Isduplicated {
 		return response.NewTicketDTO{}, errors.New("Ticket is already exist")
 	}
@@ -37,7 +40,7 @@ func (s *TicketService) CreateTicketOption(ctx context.Context, request request.
 		Allocation: request.Allocation,
 	}
 
-	err := s.repository.CreateTicket(&newTicket)
+	err := s.repository.CreateTicket(ctx, &newTicket)
 	if err != nil {
 		return response.NewTicketDTO{}, errors.New("Cannot create new ticket, please try again")
 	}
@@ -48,9 +51,12 @@ func (s *TicketService) CreateTicketOption(ctx context.Context, request request.
 }
 
 func (s *TicketService) GetTicket(ctx context.Context, id string) (response.GetTicketDTO, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	intID, _ := strconv.Atoi(id)
 
-	ticket, err := s.repository.GetTicket(intID)
+	ticket, err := s.repository.GetTicketByID(ctx, intID)
 	if err != nil {
 		return response.GetTicketDTO{}, errors.New("Ticket is not found")
 	}
@@ -60,18 +66,30 @@ func (s *TicketService) GetTicket(ctx context.Context, id string) (response.GetT
 }
 
 func (s *TicketService) PurchaseFromTicketOption(ctx context.Context, id string, request request.PurchaseFromTicketOptionsDTO) error {
+
+	s.m.Lock()
+	defer s.m.Unlock()
 	intID, _ := strconv.Atoi(id)
 
-	err := s.repository.SellTicket(int(request.Quantity), intID)
-	if err != nil {
+	ticket, err := s.repository.GetTicketByID(ctx, intID)
+	if err == nil && ticket.Allocation < request.Quantity {
+		msg := "not enough ticket for this quantity " + "enough ticket is " + strconv.Itoa(int(ticket.Allocation))
+		return errors.New(msg)
+	} else if err != nil {
 		return errors.New("error an occured while ticket selling. " + err.Error())
+	}
+
+	allocation := ticket.Allocation - request.Quantity
+	err = s.repository.UpdateAllocation(ctx, allocation, ticket.ID)
+	if err != nil {
+		return errors.New("error an occured while ticket purchase updated.")
 	}
 
 	soldTicket := models.SoldTicket{
 		UserID:   request.UserID,
 		Quantity: request.Quantity,
 	}
-	err = s.repository.SaveSoldTicket(soldTicket)
+	err = s.repository.SaveSoldTicket(ctx, soldTicket)
 	if err != nil {
 		return errors.New("error an occured while saving selled ticket")
 	}
