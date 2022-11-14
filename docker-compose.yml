@@ -1,10 +1,8 @@
 version: '3'
 services:
-
-  fullstack-postgres:
+  postgres_db:
     image: postgres:latest
-    container_name: full_db_postgres   
-
+    container_name: postgres_db   
     environment:
       - POSTGRES_USER=${DB_USER}  
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -15,8 +13,26 @@ services:
     volumes:
       - database_postgres:/var/lib/postgresql/data
     networks:
-      - fullstack
-    
+      - gowit  
+  app:
+    container_name: gowit-app
+    environment:
+      - POSTGRES_USER=${DB_USER}  
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_PORT=${DB_PORT}
+    build: .
+    ports: 
+      - 8080:8080 
+    restart: on-failure
+    volumes:
+      - api:/usr/src/app/
+    depends_on:
+      - postgres_db         
+    networks:
+      - gowit 
+        
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin_container
@@ -24,16 +40,16 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
-      - fullstack-postgres
+      - postgres_db
     ports:
       - "5050:80"
     networks:
-      - fullstack
+      - gowit
     restart: unless-stopped
 volumes:
   api:
   database_postgres:              
 
 networks:
-  fullstack:
+  gowit:
     driver: bridge
