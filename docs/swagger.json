@@ -1,0 +1,152 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a server api docs for",
+        "title": "Gowit API Documentation",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Samet Avcı",
+            "url": "https://www.linkedin.com/in/samet-avci/",
+            "email": "sametavc05@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/ticket_options": {
+            "post": {
+                "description": "Create New Ticket Option",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "POST Create New Ticket Option",
+                "parameters": [
+                    {
+                        "description": "ticket",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.NewTicketDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.NewTicketDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/ticket_options/:id": {
+            "get": {
+                "description": "Get Ticket Option With By ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "GET Get Ticket Option",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetTicketDTO"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/ticket_options/:id/purchases": {
+            "post": {
+                "description": "Purchase From Ticket Option For Sell Ticket",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "POST Purchase From Ticket Option",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "request.NewTicketDTO": {
+            "type": "object",
+            "required": [
+                "allocation",
+                "name"
+            ],
+            "properties": {
+                "allocation": {
+                    "type": "integer"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.GetTicketDTO": {
+            "type": "object",
+            "properties": {
+                "allocation": {
+                    "type": "integer"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.NewTicketDTO": {
+            "type": "object",
+            "properties": {
+                "allocation": {
+                    "type": "integer"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

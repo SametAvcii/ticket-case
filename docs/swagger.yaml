@@ -1,0 +1,100 @@
+basePath: /
+definitions:
+  request.NewTicketDTO:
+    properties:
+      allocation:
+        type: integer
+      desc:
+        type: string
+      name:
+        type: string
+    required:
+    - allocation
+    - name
+    type: object
+  response.GetTicketDTO:
+    properties:
+      allocation:
+        type: integer
+      desc:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  response.NewTicketDTO:
+    properties:
+      allocation:
+        type: integer
+      desc:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: sametavc05@gmail.com
+    name: Samet Avcı
+    url: https://www.linkedin.com/in/samet-avci/
+  description: This is a server api docs for
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Gowit API Documentation
+  version: "1.0"
+paths:
+  /ticket_options:
+    post:
+      consumes:
+      - application/json
+      description: Create New Ticket Option
+      parameters:
+      - description: ticket
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/request.NewTicketDTO'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.NewTicketDTO'
+        "404":
+          description: Not Found
+      summary: POST Create New Ticket Option
+      tags:
+      - Tickets
+  /ticket_options/:id:
+    get:
+      consumes:
+      - application/json
+      description: Get Ticket Option With By ID
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetTicketDTO'
+        "404":
+          description: Not Found
+      summary: GET Get Ticket Option
+      tags:
+      - Tickets
+  /ticket_options/:id/purchases:
+    post:
+      consumes:
+      - application/json
+      description: Purchase From Ticket Option For Sell Ticket
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+      summary: POST Purchase From Ticket Option
+      tags:
+      - Tickets
+swagger: "2.0"
