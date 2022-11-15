@@ -67,187 +67,209 @@ func TestInit(t *testing.T) {
 }
 
 func (s *Suite) Test_Repository_IsDuplicate() {
-	var (
-		ID          uint = 1
-		name             = "deneme"
-		description      = "deneme"
-		allocation  uint = 10
-	)
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT * FROM `tickets` WHERE name = ? ORDER BY `tickets`.`id` LIMIT 1")).
-		WithArgs(name).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "desc", "allocation"}).
-			AddRow(ID, name, description, allocation))
+	s.T().Run("successfull", func(t *testing.T) {
+		var (
+			ID          uint = 1
+			name             = "deneme"
+			description      = "deneme"
+			allocation  uint = 10
+		)
 
-	ctx := context.Background()
-	IsDuplicate := s.repository.IsDuplicate(ctx, name)
+		s.mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT * FROM `tickets` WHERE name = ? ORDER BY `tickets`.`id` LIMIT 1")).
+			WithArgs(name).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "desc", "allocation"}).
+				AddRow(ID, name, description, allocation))
 
-	require.Equal(s.T(), IsDuplicate, true)
+		ctx := context.Background()
+		IsDuplicate := s.repository.IsDuplicate(ctx, name)
+
+		require.Equal(s.T(), IsDuplicate, true)
+	})
+
+	s.T().Run("ticket is already", func(t *testing.T) {
+		var (
+			name = "deneme"
+		)
+
+		s.mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT * FROM `tickets` WHERE name = ? ORDER BY `tickets`.`id` LIMIT 1")).
+			WithArgs(name).
+			WillReturnError(errors.New("error test"))
+		ctx := context.Background()
+		IsDuplicate := s.repository.IsDuplicate(ctx, name)
+
+		require.Equal(s.T(), IsDuplicate, false)
+	})
+
 }
 
-func (s *Suite) Test_Repository_IsDuplicateError() {
-	var (
-		name = "deneme"
-	)
-
-	s.mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT * FROM `tickets` WHERE name = ? ORDER BY `tickets`.`id` LIMIT 1")).
-		WithArgs(name).
-		WillReturnError(errors.New("error test"))
-	ctx := context.Background()
-	IsDuplicate := s.repository.IsDuplicate(ctx, name)
-
-	require.Equal(s.T(), IsDuplicate, false)
-}
 func (s *Suite) Test_Repository_CreateTicket() {
 
-	req := models.Ticket{
-		Name:       "deneme",
-		Desc:       "deneme",
-		Allocation: 10,
-	}
+	s.T().Run("successfull", func(t *testing.T) {
 
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `tickets` (`name`,`desc`,`allocation`) VALUES (?,?,?)")).
-		WithArgs(req.Name, req.Desc, req.Allocation).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.ExpectCommit()
+		req := models.Ticket{
+			Name:       "deneme",
+			Desc:       "deneme",
+			Allocation: 10,
+		}
 
-	ctx := context.Background()
-	err := s.repository.CreateTicket(ctx, &req)
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `tickets` (`name`,`desc`,`allocation`) VALUES (?,?,?)")).
+			WithArgs(req.Name, req.Desc, req.Allocation).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		s.mock.ExpectCommit()
 
-	require.NoError(s.T(), err)
-}
+		ctx := context.Background()
+		err := s.repository.CreateTicket(ctx, &req)
 
-func (s *Suite) Test_Repository_CreateTicketError() {
-	var (
-		name        = "deneme"
-		description = "deneme"
-		allocation  = 10
-	)
+		require.NoError(s.T(), err)
+	})
+	s.T().Run("failed create ticket", func(t *testing.T) {
+		var (
+			name        = "deneme"
+			description = "deneme"
+			allocation  = 10
+		)
 
-	req := &models.Ticket{
-		Name:       name,
-		Desc:       description,
-		Allocation: uint(allocation),
-	}
+		req := &models.Ticket{
+			Name:       name,
+			Desc:       description,
+			Allocation: uint(allocation),
+		}
 
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `tickets` (`name`,`desc`,`allocation`) VALUES (?,?,?)")).
-		WithArgs(name, description, allocation).
-		WillReturnError(errors.New("error test"))
-	s.mock.ExpectRollback()
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `tickets` (`name`,`desc`,`allocation`) VALUES (?,?,?)")).
+			WithArgs(name, description, allocation).
+			WillReturnError(errors.New("error test"))
+		s.mock.ExpectRollback()
 
-	ctx := context.Background()
-	err := s.repository.CreateTicket(ctx, req)
+		ctx := context.Background()
+		err := s.repository.CreateTicket(ctx, req)
 
-	require.Error(s.T(), err)
+		require.Error(s.T(), err)
+	})
+
 }
 
 func (s *Suite) Test_Repository_GetTicketByID() {
-	var (
-		ID          uint = 1
-		name             = "deneme"
-		description      = "deneme"
-		allocation  uint = 10
-	)
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT * FROM `tickets` WHERE id = ? ORDER BY `tickets`.`id` LIMIT 1")).
-		WithArgs(ID).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "desc", "allocation"}).
-			AddRow(ID, name, description, allocation))
+	s.T().Run("successfull", func(t *testing.T) {
 
-	ctx := context.Background()
-	res, err := s.repository.GetTicketByID(ctx, int(ID))
+		var (
+			ID          uint = 1
+			name             = "deneme"
+			description      = "deneme"
+			allocation  uint = 10
+		)
 
-	require.NoError(s.T(), err)
-	require.Nil(s.T(), deep.Equal(models.Ticket{ID: ID, Name: name, Desc: description, Allocation: allocation}, res))
-}
+		s.mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT * FROM `tickets` WHERE id = ? ORDER BY `tickets`.`id` LIMIT 1")).
+			WithArgs(ID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "desc", "allocation"}).
+				AddRow(ID, name, description, allocation))
 
-func (s *Suite) Test_Repository_GetTicketByIDError() {
-	var ID uint = 1
+		ctx := context.Background()
+		res, err := s.repository.GetTicketByID(ctx, int(ID))
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT * FROM `tickets` WHERE id = ? ORDER BY `tickets`.`id` LIMIT 1")).
-		WithArgs(ID).
-		WillReturnError(errors.New("error test"))
+		require.NoError(s.T(), err)
+		require.Nil(s.T(), deep.Equal(models.Ticket{ID: ID, Name: name, Desc: description, Allocation: allocation}, res))
 
-	ctx := context.Background()
-	_, err := s.repository.GetTicketByID(ctx, int(ID))
+	})
 
-	require.Error(s.T(), err)
+	s.T().Run("failed get ticket by id", func(t *testing.T) {
+		var ID uint = 1
+
+		s.mock.ExpectQuery(regexp.QuoteMeta(
+			"SELECT * FROM `tickets` WHERE id = ? ORDER BY `tickets`.`id` LIMIT 1")).
+			WithArgs(ID).
+			WillReturnError(errors.New("error test"))
+
+		ctx := context.Background()
+		_, err := s.repository.GetTicketByID(ctx, int(ID))
+
+		require.Error(s.T(), err)
+	})
+
 }
 
 func (s *Suite) Test_Repository_UpdateAllocation() {
-	var (
-		ID         uint = 1
-		allocation uint = 10
-	)
 
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("UPDATE `tickets` SET `allocation`=? WHERE id = ?")).
-		WithArgs(allocation, ID).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.ExpectCommit()
+	s.T().Run("successfull", func(t *testing.T) {
 
-	ctx := context.Background()
-	err := s.repository.UpdateAllocation(ctx, allocation, ID)
+		var (
+			ID         uint = 1
+			allocation uint = 10
+		)
 
-	require.NoError(s.T(), err)
-}
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("UPDATE `tickets` SET `allocation`=? WHERE id = ?")).
+			WithArgs(allocation, ID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		s.mock.ExpectCommit()
 
-func (s *Suite) Test_Repository_UpdateAllocationError() {
-	var (
-		ID         uint = 1
-		allocation uint = 10
-	)
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("UPDATE `tickets` SET `allocation`=? WHERE id = ?")).
-		WithArgs(allocation, ID).
-		WillReturnError(errors.New("test error"))
-	s.mock.ExpectRollback()
+		ctx := context.Background()
+		err := s.repository.UpdateAllocation(ctx, allocation, ID)
 
-	ctx := context.Background()
-	err := s.repository.UpdateAllocation(ctx, allocation, ID)
+		require.NoError(s.T(), err)
+	})
 
-	require.Error(s.T(), err)
+	s.T().Run("failed update allocation", func(t *testing.T) {
+		var (
+			ID         uint = 1
+			allocation uint = 10
+		)
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("UPDATE `tickets` SET `allocation`=? WHERE id = ?")).
+			WithArgs(allocation, ID).
+			WillReturnError(errors.New("test error"))
+		s.mock.ExpectRollback()
+
+		ctx := context.Background()
+		err := s.repository.UpdateAllocation(ctx, allocation, ID)
+
+		require.Error(s.T(), err)
+	})
+
 }
 
 func (s *Suite) Test_Repository_SaveSoldTicket() {
+	s.T().Run("successfull", func(t *testing.T) {
 
-	req := models.SoldTicket{
-		UserID:   uuid.MustParse("406c1d05-bbb2-4e94-b183-7d208c2692e1"),
-		Quantity: 10,
-	}
+		req := models.SoldTicket{
+			UserID:   uuid.MustParse("406c1d05-bbb2-4e94-b183-7d208c2692e1"),
+			Quantity: 10,
+		}
 
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `sold_tickets` (`user_id`,`quantity`) VALUES (?,?)")).
-		WithArgs(req.UserID, req.Quantity).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	s.mock.ExpectCommit()
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `sold_tickets` (`user_id`,`quantity`) VALUES (?,?)")).
+			WithArgs(req.UserID, req.Quantity).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		s.mock.ExpectCommit()
 
-	ctx := context.Background()
-	err := s.repository.SaveSoldTicket(ctx, req)
+		ctx := context.Background()
+		err := s.repository.SaveSoldTicket(ctx, req)
 
-	require.NoError(s.T(), err)
-}
-func (s *Suite) Test_Repository_SaveSoldTicketError() {
+		require.NoError(s.T(), err)
+	})
 
-	req := models.SoldTicket{
-		UserID:   uuid.MustParse("406c1d05-bbb2-4e94-b183-7d208c2692e1"),
-		Quantity: 10,
-	}
+	s.T().Run("failed save sold ticket", func(t *testing.T) {
+		req := models.SoldTicket{
+			UserID:   uuid.MustParse("406c1d05-bbb2-4e94-b183-7d208c2692e1"),
+			Quantity: 10,
+		}
 
-	s.mock.ExpectBegin()
-	s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `sold_tickets` (`user_id`,`quantity`) VALUES (?,?)")).
-		WithArgs(req.UserID, req.Quantity).
-		WillReturnError(errors.New("error test"))
-	s.mock.ExpectRollback()
+		s.mock.ExpectBegin()
+		s.mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `sold_tickets` (`user_id`,`quantity`) VALUES (?,?)")).
+			WithArgs(req.UserID, req.Quantity).
+			WillReturnError(errors.New("error test"))
+		s.mock.ExpectRollback()
 
-	ctx := context.Background()
-	err := s.repository.SaveSoldTicket(ctx, req)
+		ctx := context.Background()
+		err := s.repository.SaveSoldTicket(ctx, req)
 
-	require.Error(s.T(), err)
+		require.Error(s.T(), err)
+	})
+
 }
