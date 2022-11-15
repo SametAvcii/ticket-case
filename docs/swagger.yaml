@@ -12,6 +12,16 @@ definitions:
     - allocation
     - name
     type: object
+  request.PurchaseFromTicketOptionsDTO:
+    properties:
+      quantity:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - quantity
+    - user_id
+    type: object
   response.GetTicketDTO:
     properties:
       allocation:
@@ -89,6 +99,12 @@ paths:
       consumes:
       - application/json
       description: Purchase From Ticket Option For Sell Ticket
+      parameters:
+      - description: ticket
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/request.PurchaseFromTicketOptionsDTO'
       responses:
         "200":
           description: OK

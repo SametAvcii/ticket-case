@@ -91,6 +91,16 @@ const docTemplate = `{
                     "Tickets"
                 ],
                 "summary": "POST Purchase From Ticket Option",
+                "parameters": [
+                    {
+                        "description": "ticket",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.PurchaseFromTicketOptionsDTO"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -117,6 +127,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.PurchaseFromTicketOptionsDTO": {
+            "type": "object",
+            "required": [
+                "quantity",
+                "user_id"
+            ],
+            "properties": {
+                "quantity": {
+                    "type": "integer"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
