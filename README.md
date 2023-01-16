@@ -1,10 +1,4 @@
 
-# Gowit-Backend-Case
-This repo is prepared for the gowit backend position case.
-
-
-
-
 ## Acknowledgements
 
  - [API Docs](http://localhost:8080/swagger/index.html)
@@ -16,13 +10,13 @@ This repo is prepared for the gowit backend position case.
 Clone the project
 
 ```bash
-  git clone https://github.com/SametAvcii/gowit-case.git
+  git clone https://github.com/SametAvcii/ticket-case.git
 ```
 
 Go to the project directory
 
 ```bash
-  cd gowit-case
+  cd ticket-case
 ```
 
 Install dependencies
